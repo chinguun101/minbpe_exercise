@@ -32,20 +32,25 @@ for i in range(merge_num):
     merges[pair]=idx 
 """
 
-def decode(ids):
-    # given ids (list of integers), return Python string
-    tokens = b"".join(vocab[idx] for idx in ids) #Concatenate 
-    text = tokens.decode("utf-8", errors="replace") #Replace avoids the unknown character
-    return text
+class Tokenizer:
+    """Base class for Tokenizers"""
 
-def encode(text):
-    #Strings to integers
-    tokens=list(text.encode("utf-8"))
-    while True:
-        stats = get_stats(tokens)
-        pair = min(stats, key=lambda p: merges.get(p, float("inf")))
-        if pair not in merges:
-            break
-        idx=merges[pair]
-        tokens=merge(tokens,pair,idx)
-    return tokens
+    def __init__(self):
+        # default: vocab size of 256 (all bytes), no merges, no patterns
+        self.merges = {} # (int, int) -> int
+        self.pattern = "" # str
+        self.special_tokens = {} # str -> int, e.g. {'<|endoftext|>': 100257}
+        self.vocab = self._build_vocab() # int -> bytes
+
+    def train(self, text, vocab_size, verbose=False):
+        # Tokenizer can train a vocabulary of size vocab_size from text
+        raise NotImplementedError
+
+    def encode(self, text):
+        # Tokenizer can encode a string into a list of integers
+        raise NotImplementedError
+
+    def decode(self, ids):
+        # Tokenizer can decode a list of integers into a string
+        raise NotImplementedError
+    
