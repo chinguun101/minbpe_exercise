@@ -1,10 +1,30 @@
 def get_stats(ids):
+    """
+    Calculates the frequency of consecutive pairs of elements in a list of IDs.
+
+    Parameters:
+    ids (list): A list of IDs (elements) from which consecutive pairs will be extracted and counted.
+
+    Returns:
+    dict: A dictionary where keys are pairs of consecutive elements and values are their respective counts.
+    """
     counts = {}  # Initialize dictionary for key: pair value: count
     for pair in zip(ids, ids[1:]): #fetching consecutive pairs and looping
         counts[pair] = + counts.get(pair, 0) + 1  # Python right-hand side evaluation invoke get() first. If the pair is not there, put 0.
     return counts
 
 def merge(ids, pair, idx):
+    """
+    Merges consecutive pairs of elements in a list into a single element.
+
+    Parameters:
+    ids (list): A list of IDs (elements) to be processed.
+    pair (tuple): A pair of consecutive elements to be merged.
+    idx (any): The new element that will replace the pair.
+
+    Returns:
+    list: A new list of IDs with the specified pairs merged.
+    """
     new_ids = []
     i=0
     while i < len(ids): #len(ids)-1 dismisses the last element so we iterate thoroughly with len(ids)
@@ -15,22 +35,6 @@ def merge(ids, pair, idx):
             new_ids.append(ids[i]) #copy the original id
             i+=1
     return new_ids
-""""
-#Fix for train function later on
-vocab_size=276
-merge_num=vocab_size-256
-ids=list(tokens)
-merges={}
-
-ids=list(tokens)
-for i in range(merge_num):
-    stats=get_stats(ids)
-    pair=max(stats, key=stats.get)
-    idx=256+i
-    print(f"merging {pair} into new token {idx}")
-    ids=merge(ids,pair,idx)
-    merges[pair]=idx 
-"""
 
 class Tokenizer:
     """Base class for Tokenizers"""

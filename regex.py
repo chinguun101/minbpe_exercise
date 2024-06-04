@@ -5,7 +5,7 @@ GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1
 class RegexTokenizer(Tokenizer):
     
     def __init__(self):
-        raise NotImplementedError
+        super().__init__()
 
     def train(self, text, vocab_size, verbose=False):
         # Tokenizer can train a vocabulary of size vocab_size from text
