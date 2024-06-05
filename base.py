@@ -58,3 +58,10 @@ class Tokenizer:
         # Tokenizer can decode a list of integers into a string
         raise NotImplementedError
 
+    def _build_vocab(self):
+        vocab = {idx: bytes([idx]) for idx in range(256)}
+        for (p0, p1), idx in self.merges.items():
+            vocab[idx] = vocab[p0] + vocab[p1]
+        for special, idx in self.special_tokens.items():
+            vocab[idx] = special.encode("utf-8")
+        return vocab
