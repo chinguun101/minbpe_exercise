@@ -65,3 +65,78 @@ class Tokenizer:
         for special, idx in self.special_tokens.items():
             vocab[idx] = special.encode("utf-8")
         return vocab
+    
+    def save(self, file_prefix):
+        """
+        Saves two files: file_prefix.vocab and file_prefix.model
+        - model file is the critical one, intended for load()
+        - vocab file is just a pretty printed version for human inspection only
+        """
+        # Construct the model filename by appending ".model" to the file prefix
+        model_file = file_prefix + ".model"
+        with open(model_file, 'w') as f:
+            # Write the version and pattern to the model file
+            f.write("minbpe v1\n")
+            f.write(f"{self.pattern}\n")
+            
+            # Write the number of special tokens, followed by each special token and its index
+            f.write(f"{len(self.special_tokens)}\n")
+            for special, idx in self.special_tokens.items():
+                f.write(f"{special} {idx}\n")
+            
+            # Write each merge pair in the merges dictionary
+            for idx1, idx2 in self.merges:
+                f.write(f"{idx1} {idx2}\n")
+        
+        # Construct the vocab filename by appending ".vocab" to the file prefix
+        vocab_file = file_prefix + ".vocab"
+        # Invert the merges dictionary to find the children of each token
+        inverted_merges = {idx: pair for pair, idx in self.merges.items()}
+        with open(vocab_file, "w", encoding="utf-8") as f:
+            for idx, token in self.vocab.items():
+                # Render the token for human-readable output
+                s = render_token(token)
+                
+                if idx in inverted_merges:
+                    # If the token has children, render it as a merge
+                    idx0, idx1 = inverted_merges[idx]
+                    s0 = render_token(self.vocab[idx0])
+                    s1 = render_token(self.vocab[idx1])
+                    f.write(f"[{s0}][{s1}] -> [{s}] {idx}\n")
+                else:
+                    # If the token is a leaf, just print it
+                    f.write(f"[{s}] {idx}\n")
+
+    def load(self, model_file):
+        """Inverse of save() but only for the model file"""
+        assert model_file.endswith(".model")
+        
+        # Initialize dictionaries for merges and special tokens
+        merges = {}
+        special_tokens = {}
+        idx = 256  # Start index for non-special tokens
+        
+        with open(model_file, 'r', encoding="utf-8") as f:
+            # Read and verify the version
+            version = f.readline().strip()
+            assert version == "minbpe v1"
+            
+            # Read the pattern
+            self.pattern = f.readline().strip()
+            
+            # Read the number of special tokens
+            num_special = int(f.readline().strip())
+            for _ in range(num_special):
+                special, special_idx = f.readline().strip().split()
+                special_tokens[special] = int(special_idx)
+            
+            # Read the merge pairs and construct the merges dictionary
+            for line in f:
+                idx1, idx2 = map(int, line.split())
+                merges[(idx1, idx2)] = idx
+                idx += 1
+        
+        # Set the instance variables
+        self.merges = merges
+        self.special_tokens = special_tokens
+        self.vocab = self._build_vocab()
