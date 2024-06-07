@@ -36,6 +36,20 @@ def merge(ids, pair, idx):
             i+=1
     return new_ids
 
+def replace_control_characters(s: str) -> str:
+    chars = []
+    for ch in s:
+        if unicodedata.category(ch)[0] != "C":
+            chars.append(ch) # this character is ok
+        else:
+            chars.append(f"\\u{ord(ch):04x}") # escape
+    return "".join(chars)
+
+def render_token(t: bytes) -> str:
+    s = t.decode('utf-8', errors='replace')
+    s = replace_control_characters(s)
+    return s
+
 class Tokenizer:
     """Base class for Tokenizers"""
 
